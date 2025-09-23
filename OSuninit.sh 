@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# 检测操作系统类型，然后删除 fish shell
+
+set -e # 遇到错误立即退出
+
+# 获取系统信息
+if [ -f /etc/os-release ]; then
+	. /etc/os-release
+	OS_NAME=$IDf
+else
+	echo "无法检测操作系统类型"
+	exit 1
+fi
+
+echo "检测到系统: $OS_NAME $OS_VERSION"
+
+remove_fish() {
+	case "$OS_NAME" in
+	ubuntu | debian)
+		if dpkg -l | grep -qw fish; then
+			echo "正在卸载 fish..."
+			sudo apt remove -y fish
+			echo "卸载完成"
+		else
+			echo "系统未安装 fish"
+		fi
+		;;
+	centos | rhel | almalinux)
+		if rpm -q fish >/dev/null 2>&1; then
+			echo "正在卸载 fish..."
+			sudo yum remove -y fish
+			echo "卸载完成"
+		else
+			echo "系统未安装 fish"
+		fi
+		;;
+	fedora)
+		if rpm -q fish >/dev/null 2>&1; then
+			echo "正在卸载 fish..."
+			sudo dnf remove -y fish
+			echo "卸载完成"
+		else
+			echo "系统未安装 fish"
+		fi
+		;;
+	arch)
+		if pacman -Q fish >/dev/null 2>&1; then
+			echo "正在卸载 fish..."
+			sudo pacman -Rns --noconfirm fish
+			echo "卸载完成"
+		else
+			echo "系统未安装 fish"
+		fi
+		;;
+	*)
+		echo "不支持的系统: $OS_NAME"
+		exit 1
+		;;
+	esac
+}
+
+remove_fish
+
+# 文件检测示例
+
+FILE_PATH="./clash-for-linux-install"
+
+if [ -f "$FILE_PATH" ]; then
+	echo "文件存在：$FILE_PATH"
+	rm -rf "$FILE_PATH"
+else
+	echo "文件不存在：$FILE_PATH"
+fi
+
+回复默认的软件源
+recover_softwaresource() {
+	case "$OS_NAME" in
+	ubuntu | debian)
+		sudo cp "/etc/apt/sources.list.bak" "/etc/apt/sources.list"
+		# if dpkg -l | grep -qw fish; then
+		#     echo "正在卸载 fish..."
+		#     sudo apt remove -y fish
+		#     echo "卸载完成"
+		# else
+		#     echo "系统未安装 fish"
+		# fi
+		;;
+	centos | rhel | almalinux)
+		if rpm -q fish >/dev/null 2>&1; then
+			echo "正在卸载 fish..."
+			sudo yum remove -y fish
+			echo "卸载完成"
+		else
+			echo "系统未安装 fish"
+		fi
+		;;
+	fedora)
+		if rpm -q fish >/dev/null 2>&1; then
+			echo "正在卸载 fish..."
+			sudo dnf remove -y fish
+			echo "卸载完成"
+		else
+			echo "系统未安装 fish"
+		fi
+		;;
+	arch)
+		if pacman -Q fish >/dev/null 2>&1; then
+			echo "正在卸载 fish..."
+			sudo pacman -Rns --noconfirm fish
+			echo "卸载完成"
+		else
+			echo "系统未安装 fish"
+		fi
+		;;
+	*)
+		echo "不支持的系统: $OS_NAME"
+		exit 1
+		;;
+	esac
+
+}
