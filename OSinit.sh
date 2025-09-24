@@ -1,22 +1,15 @@
 #!/bin/bash
-PS4='+$LINENO: '  # 显示行号
-set -e            #遇到错误就退出
-. /etc/os-release # 读取系统资源
 
-# if [ "$(id -u)" -eq 0 || ]; then
-#     echo "当前是 root 用户执行"
-# else
-#     echo "当前不是 root 用户执行"
-#     exit 1
-# fi
+PS4='+$LINENO: ' # 显示行号
 
-# if [ "$(id -u)" -ne 0 && ! sudo -v ] >/dev/null 2>&1; then
-# 	echo "请切换用的sudo 权限用户开启脚本"
-# 	exit 1
-# fi
-#输出用户uid 数值，并且看看有没有的sudo 权限
+set -e # 遇到错误就退出
+
+if [ -f /etc/os-release ]; then
+	. /etc/os-release # 读取系统资源
+fi
+
 echo "权限检查......................................."
-
+# 权限检查：确保用户是 root 或具有 sudo 权限
 if [ $(id -u) -ne 0 ] && ! sudo -v >/dev/null 2>&1; then
 	echo "请切换为具有 sudo 权限的用户来开启脚本"
 	exit 1
@@ -194,20 +187,8 @@ echo "检测系统名称：${ID},系统版本：${VERSION_ID}..........."
 if [[ "$NAME" = "Ubuntu" ]]; then
 	set_ubuntu "$VERSION_ID"
 fi
+
 install_deps "$NAME"
-
-# if [ "$NAME" = "Centos" ]; then
-#     sudo yum check-upate
-# fi
-# 修改root 默认密码 neon
-
-# echo "root:neon" | sudo chpasswd
-# if [[ $? -eq 0 ]]; then
-# 	echo "密码修改成功"
-# else
-# 	echo "密码修改失败"
-# 	exit 1
-# fi
 
 ## 在ubuntu 中登录shell和非登录shell启动的是不同的配置文件：.profile .bashrc  文件
 

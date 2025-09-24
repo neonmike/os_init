@@ -4,10 +4,13 @@
 
 set -e # 遇到错误立即退出
 
+OS_NAME=""
+OS_VERSION=""
 # 获取系统信息
 if [ -f /etc/os-release ]; then
 	. /etc/os-release
-	OS_NAME=$IDf
+	OS_NAME=$ID
+	OS_VERSION=$VERSION_ID
 else
 	echo "无法检测操作系统类型"
 	exit 1
