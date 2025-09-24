@@ -1,11 +1,11 @@
 #!/bin/bash
 
-PS4='+$LINENO: ' # 显示行号
+PS4='+[$BASH_SOURCE:$LINENO] ' # 显示当前脚本文件名和行号，方便调试定位
 
 set -e # 遇到错误就退出
 
 if [ -f /etc/os-release ]; then
-	. /etc/os-release # 读取系统资源
+	. /etc/os-release # 读取系统发行版信息
 fi
 
 echo "权限检查......................................."
@@ -15,7 +15,6 @@ if [ $(id -u) -ne 0 ] && ! sudo -v >/dev/null 2>&1; then
 	exit 1
 fi
 
-# set -x
 install_deps() {
 	os_version=$1
 	# os_version_num=$2
@@ -41,7 +40,6 @@ install_deps() {
 		fi
 
 	fi
-	# set +x
 }
 
 set_ubuntu() {
