@@ -12,6 +12,8 @@
 请在dev 分支开发提交
 
 ## 项目进展
+
+ubuntu 集成测试 [时间：2023-12-12]
 仅仅测试了在Ubuntu上相关的设置方式
 
 ## 功能
@@ -21,5 +23,10 @@
 - 修改软件源 ：阿里镜像仓库地址
 - 下载默认代理工具：clash for linux install
 
-------------------------------
+## 相关地址
+- [clash for linux install](https://github.com/Dreamacro/clash-for-linux)
+- [fish-shell](https://github.com/fish-shell/fish-shell)
+
+---
+## status 
 此项目的不定时维护更新！
