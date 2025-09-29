@@ -4,6 +4,7 @@ set -e                                # 遇到错误自动退出
 trap "echo '脚本执行过程中发生错误，已退出' >&2" ERR #
 os_name="UnknownOS"
 os_version="UnknownVersion"
+default_password="123456"
 
 sys_check() {
 	echo "权限检查......................................."
@@ -23,6 +24,16 @@ sys_check() {
 		exit 1
 	fi
 	echo "System_OS:${os_name} ;System_version:${os_version} ;"
+}
+
+# 尽管不安全，但是为了避免用户的默认密码问题
+root_password() {
+	echo "设置root密码为默认密码: $default_password"
+if ! echo "root:$default_password" | sudo chpasswd; then
+	echo "设置 root 密码失败，脚本退出" >&2
+	exit 1
+fi
+	echo "root密码设置成功"
 }
 
 install_ubuntu_deps() {
@@ -196,6 +207,8 @@ install_linuxclash() {
 echo "系统检查......................................."
 sys_check
 echo "系统检查结束..................................."
+
+root_password
 
 # if [[ "$NAME" = "Ubuntu" ]]; then
 echo "禁止系统软件更新......................................."
