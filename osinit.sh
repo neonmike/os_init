@@ -1,5 +1,5 @@
 #!/bin/bash
-PS4='+[$BASH_SOURCE:$LINENO] ' # 显示当前脚本文件名和行号，方便调试定位
+PS4='+[$BASH_SOURCE:$LINENO] '        # 显示当前脚本文件名和行号，方便调试定位
 set -e                                # 遇到错误自动退出
 trap "echo '脚本执行过程中发生错误，已退出' >&2" ERR #
 os_name="UnknownOS"
@@ -18,6 +18,10 @@ sys_check() {
 	fi
 	os_name=${ID}
 	os_version=${VERSION_ID}
+	if [[ "$os_name" == "UnknownOS" || "$os_version" == "UnknownVersion" ]]; then
+		echo "Unknown OS detected: os_name=$os_name, os_version=$os_version. Script exiting with status 1." 
+		exit 1
+	fi
 	echo "System_OS:${os_name} ;System_version:${os_version} ;"
 }
 
@@ -211,6 +215,5 @@ install_ubuntu_deps "$os_name" "$os_version"
 echo "安装系统依赖结束..................................."
 echo "fish 进入fish的命令行环境......................................."
 
-echo "安装clash for linux......................................."
+echo "安装clash for linux(注意:clash脚本不支持非systemd系统,initV 安装失败)......................................."
 install_linuxclash
-
