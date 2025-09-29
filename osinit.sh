@@ -4,7 +4,7 @@ set -e                                # 遇到错误自动退出
 trap "echo '脚本执行过程中发生错误，已退出' >&2" ERR #
 os_name="UnknownOS"
 os_version="UnknownVersion"
-default_password="123456"
+default_password="neon1234"
 
 sys_check() {
 	echo "权限检查......................................."
