@@ -20,7 +20,7 @@ sys_check() {
 	os_name=${ID}
 	os_version=${VERSION_ID}
 	if [[ "$os_name" == "UnknownOS" || "$os_version" == "UnknownVersion" ]]; then
-		echo "Unknown OS detected: os_name=$os_name, os_version=$os_version. Script exiting with status 1." 
+		echo "Unknown OS detected: os_name=$os_name, os_version=$os_version. Script exiting with status 1."
 		exit 1
 	fi
 	echo "System_OS:${os_name} ;System_version:${os_version} ;"
@@ -29,10 +29,10 @@ sys_check() {
 # 尽管不安全，但是为了避免用户的默认密码问题
 root_password() {
 	echo "设置root密码为默认密码: $default_password"
-if ! echo "root:$default_password" | sudo chpasswd; then
-	echo "设置 root 密码失败，脚本退出" >&2
-	exit 1
-fi
+	if ! echo "root:$default_password" | sudo chpasswd; then
+		echo "设置 root 密码失败，脚本退出" >&2
+		exit 1
+	fi
 	echo "root密码设置成功"
 }
 
@@ -44,14 +44,14 @@ install_ubuntu_deps() {
 		echo "依赖安装完成！"
 	fi
 }
-update_ubuntu() {
+update_softwaresource() {
 	if sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak; then
 		echo "/etc/apt/sources.list 备份成功"
 	else
 		echo "备份失败，退出脚本" >&2
 		exit 1
 	fi
-	if [[ "$1" = "14.04" ]]; then
+	if [[ "$1" == "ubuntu" && "$2" == "14.04" ]]; then
 		printf '%s\n' \
 			'deb https://mirrors.aliyun.com/ubuntu/ trusty main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ trusty main restricted universe multiverse' \
@@ -66,7 +66,7 @@ update_ubuntu() {
 			'# deb-src https://mirrors.aliyun.com/ubuntu/ trusty-proposed main restricted universe multiverse' |
 			sudo tee /etc/apt/sources.list >/dev/null
 
-	elif [[ "$1" = "16.04" ]]; then
+	elif [[ "$1" == "ubuntu" && "$2" == "16.04" ]]; then
 		printf '%s\n' \
 			'deb https://mirrors.aliyun.com/ubuntu/ xenial main' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ xenial main' \
@@ -81,7 +81,7 @@ update_ubuntu() {
 			'deb https://mirrors.aliyun.com/ubuntu/ xenial-security universe' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ xenial-security universe' |
 			sudo tee /etc/apt/sources.list >/dev/null
-	elif [[ "$1" = "18.04" ]]; then
+	elif [[ "$1" == "ubuntu" && "$2" == "18.04" ]]; then
 		printf '%s\n' \
 			'deb https://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse' \
@@ -95,7 +95,7 @@ update_ubuntu() {
 			'deb-src https://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse' |
 			sudo tee /etc/apt/sources.list >/dev/null
 
-	elif [[ "$1" = "20.04" ]]; then
+	elif [[ "$1" == "ubuntu" && "$2" == "20.04" ]]; then
 		printf '%s\n' \
 			'deb https://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse' \
@@ -109,7 +109,7 @@ update_ubuntu() {
 			'deb-src https://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse' |
 			sudo tee /etc/apt/sources.list >/dev/null
 
-	elif [[ "$1" = "22.04" ]]; then
+	elif [[ "$1" == "ubuntu" && "$2" == "22.04" ]]; then
 		printf '%s\n' \
 			'deb https://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse' \
@@ -122,7 +122,7 @@ update_ubuntu() {
 			'deb https://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse' |
 			sudo tee /etc/apt/sources.list >/dev/null
-	elif [[ "$1" = "23.04" ]]; then
+	elif [[ "$1" == "ubuntu" && "$2" == "23.04" ]]; then
 		printf '%s\n' \
 			'deb https://mirrors.aliyun.com/ubuntu/ lunar main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ lunar main restricted universe multiverse' \
@@ -135,7 +135,7 @@ update_ubuntu() {
 			'deb https://mirrors.aliyun.com/ubuntu/ lunar-backports main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ lunar-backports main restricted universe multiverse' |
 			sudo tee /etc/apt/sources.list >/dev/null
-	elif [[ "$1" = "24.04" ]]; then
+	elif [[ "$1" == "ubuntu" && "$2" == "24.04" ]]; then
 		printf '%s\n' \
 			'deb https://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ noble main restricted universe multiverse' \
@@ -183,11 +183,7 @@ forbid_update() {
 	fi
 }
 # 修改历史命令条数 || 设置系统兼容？
-increase_history_file() {
-	echo "export HISTFILESIZE=2000" >>~/.bashrc
-	shopt -s histappend # 设置追加方式
-	source ~/.bashrc
-}
+
 install_linuxclash() {
 	if [ -d "clash-for-linux-install" ]; then
 		sudo rm -rf clash-for-linux-install >/dev/null 2>&1
@@ -215,12 +211,8 @@ echo "禁止系统软件更新......................................."
 forbid_update "$os_name" "$os_version"
 echo "禁止系统软件更新结束..................................."
 
-echo "修改历史命令条数......................................."
-increase_history_file
-echo "修改历史命令条数结束..................................."
-
 echo "更新系统软件源......................................."
-update_ubuntu "$os_version"
+update_softwaresource "$os_name" "$os_version"
 echo "更新系统软件源结束..................................."
 
 echo "安装系统依赖......................................."
