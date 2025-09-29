@@ -1,6 +1,6 @@
 #!/bin/bash
 PS4='+[$BASH_SOURCE:$LINENO] ' # 显示当前脚本文件名和行号，方便调试定位
-# set -e                                # 遇到错误自动退出
+set -e                                # 遇到错误自动退出
 trap "echo '脚本执行过程中发生错误，已退出' >&2" ERR #
 os_name="UnknownOS"
 os_version="UnknownVersion"
@@ -46,7 +46,7 @@ update_ubuntu() {
 			'deb-src https://mirrors.aliyun.com/ubuntu/ trusty-updates main restricted universe multiverse' \
 			'deb https://mirrors.aliyun.com/ubuntu/ trusty-backports main restricted universe multiverse' \
 			'deb-src https://mirrors.aliyun.com/ubuntu/ trusty-backports main restricted universe multiverse' \
-			'\n## Not recommended\n' \
+			'# Not recommended' \
 			'# deb https://mirrors.aliyun.com/ubuntu/ trusty-proposed main restricted universe multiverse' \
 			'# deb-src https://mirrors.aliyun.com/ubuntu/ trusty-proposed main restricted universe multiverse' |
 			sudo tee /etc/apt/sources.list >/dev/null
@@ -150,18 +150,18 @@ forbid_update() {
 			# 2. 禁用开机自启
 			sudo systemctl disable unattended-upgrades
 			sudo systemctl daemon-reload
-		elif [[ $os_version == "14.04" || $os_version == "12.04" ]]; then
+		elif [[ $os_version == "14.04" ]]; then
 			# 1. 停止服务
 			sudo service unattended-upgrades stop
 			# 2. 禁用开机自启
 			sudo update-rc.d unattended-upgrades disable
 			# 或者完全移除（更彻底）
-			sudo update-rc.d unattended-upgrades remove
+			sudo update-rc.d -f unattended-upgrades remove
 			# 3. 无需手动重新加载（service命令会自动处理）
 			# 4. 查看服务状态
 			sudo service unattended-upgrades status
 			# 5. 检查开机自启状态
-			sudo update-rc.d unattended-upgrades defaults-disabled
+			# sudo update-rc.d unattended-upgrades defaults-disabled
 			# 或查看运行级别链接
 			# ls -la /etc/rc*.d/*unattended-upgrades*
 		fi
