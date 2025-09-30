@@ -40,11 +40,26 @@ install_ubuntu_deps() {
 	# 检查是否已安装 curl, git, fish
 	if ! command -v curl >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1 || ! command -v fish >/dev/null 2>&1; then
 		echo "开始安装 curl, git, fish .........................."
-		sudo apt update && sudo apt install curl git fish -y
+		if ! sudo apt update && sudo apt install curl git fish -y; then
+			echo "install dependences fail "
+			eixt 1
+		fi
 		echo "依赖安装完成！"
 	fi
 }
-update_softwaresource() {
+# 注意fish 官方已经不支持Centos
+install_centos_deps() {
+	# 检查是否已安装 curl, git
+	if ! command -v curl >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1; then
+		echo "开始安装 curl, git, fish-all.........................."
+		if ! sudo dnf makecache && sudo dnf install curl git-all -y; then
+			echo "Centos 目前来说已经不在维护，我们不推荐使用此脚本"
+			exit 1
+		fi
+		echo "依赖安装完成！"
+	fi
+}
+update_ubuntu() {
 	if sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak; then
 		echo "/etc/apt/sources.list 备份成功"
 	else
@@ -156,6 +171,100 @@ update_softwaresource() {
 	echo "sources.list 已更新为使用阿里云镜像。"
 }
 
+# 10 以下的公开地址不在维护
+update_debian() {
+	if sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak; then
+		echo "/etc/apt/sources.list 备份成功"
+	else
+		echo "备份失败，退出脚本" >&2
+		exit 1
+	fi
+	if [[ $1 == "debian" && $2 == "12" ]]; then
+		printf '%s\n' \
+			'# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释' \
+			'deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware' \
+			'# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm main contrib non-free non-free-firmware' \
+			'deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware' \
+			'# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-updates main contrib non-free non-free-firmware' \
+			'deb https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main contrib non-free non-free-firmware' \
+			'# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ bookworm-backports main contrib non-free non-free-firmware' \
+			'# 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换' \
+			'deb https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' \
+			'# deb-src https://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware' |
+			sudo tee /etc/apt/sources.list >/dev/null
+	elif [[ $1 == "debian" && $2 == "13" ]]; then
+		printf '%s\n' \
+			'# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释' \
+			'deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie main contrib non-free non-free-firmware' \
+			'# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie main contrib non-free non-free-firmware' \
+			'' \
+			'deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-updates main contrib non-free non-free-firmware' \
+			'# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-updates main contrib non-free non-free-firmware' \
+			'' \
+			'deb https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-backports main contrib non-free non-free-firmware' \
+			'# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ trixie-backports main contrib non-free non-free-firmware' \
+			'' \
+			'# 以下安全更新软件源包含了官方源与镜像站配置，如有需要可自行修改注释切换' \
+			'deb https://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware' \
+			'# deb-src https://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware' |
+			sudo tee /etc/apt/sources.list >/dev/null
+	elif [[ $1 == "debian" && $2 == "11" ]]; then
+		printf '%s\n' \
+			'# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释' \
+			'deb https://mirrors.aliyun.com/debian/ bullseye main non-free contrib' \
+			'deb-src https://mirrors.aliyun.com/debian/ bullseye main non-free contrib' \
+			'deb https://mirrors.aliyun.com/debian-security/ bullseye-security main' \
+			'deb-src https://mirrors.aliyun.com/debian-security/ bullseye-security main' \
+			'deb https://mirrors.aliyun.com/debian/ bullseye-updates main non-free contrib' \
+			'deb-src https://mirrors.aliyun.com/debian/ bullseye-updates main non-free contrib' \
+			'#deb https://mirrors.aliyun.com/debian/ bullseye-backports main non-free contrib' \
+			'#deb-src https://mirrors.aliyun.com/debian/ bullseye-backports main non-free contrib' |
+			sudo tee /etc/apt/sources.list >/dev/nul
+	else
+		echo "/etc/apt/sources.list 更新失败，退出脚本" >&2
+		exit 1
+	fi
+	sudo apt update
+	echo "sources.list 已更新为使用阿里云镜像。"
+}
+
+# 10 以下的公开地址不在维护
+update_centos() {
+	if [[ "$1" == "centos" && "$2" == "8" ]]; then
+		if [[ ! -f /etc/yum.repos.d/CentOS-Base.repo.backup ]]; then
+			mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup
+		fi
+		if ! command -v wget; then
+			sudo yum install wget -y
+		fi
+		# if ! curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.tencent.com/repo/centos7_base.repo >/dev/null 1>&2; then
+		# 	echo "获取镜像地址失败"
+		# 	exit 1
+		# fi
+		# 一口改掉所有的地址
+		sed -e "s|^mirrorlist=|#mirrorlist=|g" \
+			-e "s|^#baseurl=http://mirror.centos.org/centos/\$releasever|baseurl=https://mirrors.tuna.tsinghua.edu.cn/centos-vault/8.5.2111|g" \
+			-e "s|^#baseurl=http://mirror.centos.org/\$contentdir/\$releasever|baseurl=https://mirrors.tuna.tsinghua.edu.cn/centos-vault/8.5.2111|g" \
+			-i.bak \
+			/etc/yum.repos.d/CentOS-*.repo
+	elif [[ "$1" == "centos" && "$2" == "6" ]]; then
+		:
+	else
+		echo "/etc/apt/sources.list 更新失败，退出脚本" >&2
+		exit 1
+	fi
+}
+
+update_softwaresource() {
+	if [[ $1 == "ubuntu" ]]; then
+		update_ubuntu "$1" "$2"
+	elif [[ $1 == "debian" ]]; then
+		update_debian "$1" "$2"
+	elif [[ $1 == "centos" ]]; then
+		update_centos "$1" "$2"
+	fi
+
+}
 # 禁用自动更新
 forbid_update() {
 	if [[ $1 == "ubuntu" ]]; then
@@ -181,6 +290,38 @@ forbid_update() {
 			# ls -la /etc/rc*.d/*unattended-upgrades*
 		fi
 	fi
+	if [[ $1 == "debian" ]]; then
+		if [[ $2 == "12" || $2 == "11" || $2 == "10" || $2 == "9" || $2 == "8" || $2 == "7" ]]; then
+			sudo systemctl stop apt-daily.timer apt-daily-upgrade.timer
+			sudo systemctl disable apt-daily.timer apt-daily-upgrade.timer
+			sudo systemctl mask apt-daily.service apt-daily-upgrade.service
+			# 禁用 packagekit
+			sudo systemctl stop packagekit
+			sudo systemctl disable packagekit
+			sudo systemctl mask packagekit
+			sudo systemctl daemon-reload
+		fi
+	fi
+	if [[ "$1" == "centos" ]]; then
+		if [[ "$2" == "8" ]]; then
+			# 检查自动更新服务是否安装
+			if systemctl list-unit-files | grep -q '^dnf-automatic'; then
+				sudo systemctl stop dnf-automatic.timer
+				sudo systemctl disable dnf-automatic.time
+			fi
+		elif [[ "$2" == "7" ]]; then
+			:
+			# 停止并禁用 yum-cron
+			# sudo systemctl stop yum-cron
+			# sudo systemctl disable yum-cron
+		elif [[ "$2" == "6" ]]; then
+			:
+			# 停止并禁用 yum-cron
+			# sudo systemctl stop yum-cron
+			# sudo systemctl disable yum-cron
+		fi
+	fi
+
 }
 # 修改历史命令条数 || 设置系统兼容？
 
@@ -215,9 +356,12 @@ echo "更新系统软件源......................................."
 update_softwaresource "$os_name" "$os_version"
 echo "更新系统软件源结束..................................."
 
-echo "安装系统依赖......................................."
-install_ubuntu_deps "$os_name" "$os_version"
-echo "安装系统依赖结束..................................."
+# echo "安装系统依赖......................................."
+# install_ubuntu_deps "$os_name" "$os_version"
+# echo "安装系统依赖结束..................................."
+
+install_centos_deps "$os_name" "$os_version"
+
 echo "fish 进入fish的命令行环境......................................."
 
 echo "安装clash for linux(注意:clash脚本不支持非systemd系统,initV 安装失败)......................................."
